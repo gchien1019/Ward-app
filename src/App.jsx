@@ -60,35 +60,38 @@ export default function App() {
         setAuthUser(session.user)
         const p = await api.getProfile(session.user.id)
         setProfile(p)
+        // 有登入才載入資料
+        setLoading(true)
+        await refresh()
+        try {
+          const saved = JSON.parse(localStorage.getItem(SK_SHIFT) || 'null')
+          if (saved && saved.date === todayStr()) setShiftInfo(saved)
+        } catch {}
+        setLoading(false)
       }
       setAuthLoading(false)
     })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
+      if (event === 'SIGNED_IN' && session?.user) {
         setAuthUser(session.user)
         const p = await api.getProfile(session.user.id)
         setProfile(p)
-      } else {
+        setLoading(true)
+        await refresh()
+        try {
+          const saved = JSON.parse(localStorage.getItem(SK_SHIFT) || 'null')
+          if (saved && saved.date === todayStr()) setShiftInfo(saved)
+        } catch {}
+        setLoading(false)
+      } else if (event === 'SIGNED_OUT') {
         setAuthUser(null)
         setProfile(null)
         setShiftInfo(null)
+        setLoading(false)
       }
     })
     return () => subscription.unsubscribe()
-  }, [])
-
-  // 載入資料
-  useEffect(() => {
-    (async () => {
-      setLoading(true)
-      await refresh()
-      // 讀取班別設定（今日有效才用）
-      try {
-        const saved = JSON.parse(localStorage.getItem(SK_SHIFT) || 'null')
-        if (saved && saved.date === todayStr()) setShiftInfo(saved)
-      } catch {}
-      setLoading(false)
-    })()
   }, [refresh])
 
   function showToast(msg, kind = 'ok') {
@@ -388,7 +391,7 @@ function AuthScreen() {
       </div>
       <div>
         <div style={{ fontWeight: 600, fontSize: 17 }}>病房物品點班</div>
-        <div style={{ fontSize: 13, color: '#5C6B66' }}>常威科病房財產即時稽核</div>
+        <div style={{ fontSize: 13, color: '#5C6B66' }}>A121 病房財產即時稽核</div>
       </div>
     </div>
   )
