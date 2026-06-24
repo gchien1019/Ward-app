@@ -154,10 +154,12 @@ export async function confirmShiftLogin(id) {
 
 /* ---------- Supabase Auth ---------- */
 
+function padPin(pin) { return pin + '@@' } // 四碼補成六碼，用戶感知不到
+
 export async function signUp(email, pin, displayName) {
   const { data, error } = await supabase.auth.signUp({
     email,
-    password: pin,
+    password: padPin(pin),
     options: { data: { display_name: displayName } },
   })
   if (error) throw error
@@ -175,7 +177,7 @@ export async function signUp(email, pin, displayName) {
 export async function signIn(email, pin) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
-    password: pin,
+    password: padPin(pin),
   })
   if (error) throw error
   return data
@@ -193,7 +195,7 @@ export async function resetPassword(email) {
 }
 
 export async function updatePassword(newPin) {
-  const { error } = await supabase.auth.updateUser({ password: newPin })
+  const { error } = await supabase.auth.updateUser({ password: padPin(newPin) })
   if (error) throw error
 }
 
